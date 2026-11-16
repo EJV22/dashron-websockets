@@ -33,6 +33,13 @@ export function securityMiddleWare() {
         try {
             const decision = await httpArcjet.protect(req);
 
+            console.log("ARCJET MODE:", arcjetMode);
+
+            console.log("ARCJET DECISION:", {
+                denied: decision.isDenied(),
+                reason: decision.reason
+            });
+
             if(decision.isDenied()) {
                 if(decision.reason.isRateLimit()) {
                     return res.status(429).json({ error: 'Too many requests '});
