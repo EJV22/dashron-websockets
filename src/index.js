@@ -17,24 +17,39 @@ const server = http.createServer(app);
 
 app.use(express.json());
 
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true }));
+// CORS configuration
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',').map(origin => origin.trim()) ?? true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Hello from Express!' });
 });
 
+// Arcjet security
 app.use(securityMiddleWare());
 
+// API routes
 app.use('/matches', matchRouter);
-app.use('/matches/:id/commentary', commentaryRouter );
+app.use('/matches/:id/commentary', commentaryRouter);
 
-const { broadcastMatchCreated, broadcastCommentary, broadcastScoreUpdate } = attachWebSocketServer(server);
+const {
+  broadcastMatchCreated,
+  broadcastCommentary,
+  broadcastScoreUpdate
+} = attachWebSocketServer(server);
+
 app.locals.broadcastScoreUpdate = broadcastScoreUpdate;
 app.locals.broadcastMatchCreated = broadcastMatchCreated;
 app.locals.broadcastCommentary = broadcastCommentary;
 
 server.listen(PORT, HOST, () => {
-  const baseUrl = HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
+  const baseUrl = HOST === '0.0.0.0'
+      ? `http://localhost:${PORT}`
+      : `http://${HOST}:${PORT}`;
+
   console.log(`Server is running on ${baseUrl}`);
   console.log(`Websocket server running on ${baseUrl.replace('http', 'ws')}/ws`);
-})
+});
